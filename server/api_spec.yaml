@@ -1,0 +1,165 @@
+openapi: 3.0.0
+info:
+  title: Paleo League API
+  description: API for the Paleo League
+  version: 1.0.0
+servers:
+  - url: '{environment}/api/v1'
+    variables:
+      environment:
+        default: http://localhost:3030
+        enum:
+          - http://localhost:3030
+paths:
+  /matches:
+    get:
+      summary: get all matches
+      operationId: getMatches
+      tags:
+        - matches
+      responses:
+        '200':
+          description: A list of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/daoMatch'
+    post:
+      summary: create a match
+      operationId: createMatch
+      tags:
+        - matches
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dtoMatch'
+      responses:
+        '201':
+          description: The match was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+  /matches/{id}:
+    get:
+      summary: get a match by id
+      operationId: getMatchById
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: Match not found
+    put:
+      summary: update a match by id
+      operationId: updateMatchById
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dtoUpdateMatch'
+      responses:
+        '200':
+          description: The match was updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: Match not found
+components:
+  schemas:
+    daoMatch:
+      type: object
+      properties:
+        id:
+          type: integer
+        tournamentPhase:
+          type: string
+        homeTeam:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        awayTeam:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+        matchDate:
+          type: string
+          format: date-time
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+    dtoMatch:
+      type: object
+      properties:
+        tournamentPhase:
+          type: string
+        homeTeam:
+          type: integer
+        awayTeam:
+          type: integer
+        matchDate:
+          type: string
+          format: date-time
+    dtoUpdateMatch:
+      type: object
+      properties:
+        tournamentPhase:
+          type: string
+        homeTeam:
+          type: integer
+        awayTeam:
+          type: integer
+        matchDate:
+          type: string
+          format: date-time
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+
+
