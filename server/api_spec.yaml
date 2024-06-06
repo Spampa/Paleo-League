@@ -11,6 +11,29 @@ servers:
         enum:
           - http://localhost:3030
 paths:
+  /teams:
+    get:
+      summary: get all teams
+      operationId: getTeams
+      tags:
+        - teams
+      responses:
+        '200':
+          description: A list of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    description:
+                      type: string
+                      nullable: true
   /matches:
     get:
       summary: get all matches
@@ -44,6 +67,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/daoMatch'
+  /matches/live:
+    get:
+      summary: get all live matches
+      operationId: getLiveMatches
+      tags:
+        - matches
+      responses:
+        '200':
+          description: A list of live matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: No live matches found'
   /matches/{id}:
     get:
       summary: get a match by id
@@ -91,6 +131,107 @@ paths:
                 $ref: '#/components/schemas/daoMatch'
         '404':
           description: Match not found
+  /matches/phase/{phase}:
+    get:
+      summary: get all matches by phase
+      operationId: getMatchesByPhase
+      tags:
+        - matches
+      parameters:
+        - name: phase
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: No matches found
+  /matches/{id}/start:
+    patch:
+      summary: start a match
+      operationId: startMatch
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The match was started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: Match not found
+  /matches/{id}/end:
+    patch:
+      summary: end a match
+      operationId: endMatch
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The match was ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: Match not found
+  /matches/{id}/goal/{team}/{value}:
+    patch:
+      summary: add a goal to a team
+      operationId: addGoal
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: team
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - home
+              - away
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The goal was added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/daoMatch'
+        '404':
+          description: Match not found
+        '400':
+          description: Invalid team
 components:
   schemas:
     daoMatch:
@@ -119,14 +260,18 @@ components:
           format: date-time
         homeScore:
           type: integer
+          nullable: true
         awayScore:
           type: integer
+          nullable: true
         startTime:
           type: string
           format: date-time
+          nullable: true 
         endTime:
           type: string
           format: date-time
+          nullable: true
     dtoMatch:
       type: object
       properties:
@@ -138,7 +283,6 @@ components:
           type: integer
         matchDate:
           type: string
-          format: date-time
     dtoUpdateMatch:
       type: object
       properties:

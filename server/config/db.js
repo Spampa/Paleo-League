@@ -45,16 +45,16 @@ async function createTables(){
                 homeScore INT,
                 awayScore INT,
                 match_date DATETIME NOT NULL,
-                start_time TIME,
-                end_time TIME,
+                start_time DATETIME,
+                end_time DATETIME,
                 FOREIGN KEY (homeTeam) REFERENCES teams(team_id),
                 FOREIGN KEY (awayTeam) REFERENCES teams(team_id)
             )
         `)
 
-        //inserimento squadre
+        /*inserimento squadre
         await conn.query(`
-            INSERT INTO teams(name, class) VALUE
+            INSERT INTO teams(name, class) VALUES
             ('Pink Roccia', '3IC'),
             ('Win or Go Home', '3IF'),
             ('Bacca Team', '5ID'),
@@ -71,6 +71,18 @@ async function createTables(){
             ('Scarsenal', '1MF'),
             ('Pozzoni Trasporti', '2MA'),
             ('Brena Team', '3EA')
+        `);*/
+
+        //tabella utenti
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS users(
+                user_id CHAR(32) PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                surname VARCHAR(255) NOT NULL,
+                role VARCHAR(255) DEFAULT 'user',
+                picture TEXT
+            )
         `);
     }
     catch(err){

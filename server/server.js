@@ -6,10 +6,15 @@ require('./config/db').createDatabase();
 const express = require('express');
 const cors = require('cors');
 const router = express.Router();
+const session = require('express-session');
+const passport = require('passport');
 
 //app settings
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json())
 const port = process.env.PORT;
 
@@ -36,9 +41,21 @@ app.use(
     })
 );
 
+//auth
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 //routes
 const routes = require('./routes/index');
 app.use(routes.match);
+app.use(routes.team);
+app.use(routes.auth);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

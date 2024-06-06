@@ -1,4 +1,3 @@
-const mariadb = require("mariadb");
 const pool = require("../config/pool");
 
 async function getMatches() {
@@ -90,6 +89,97 @@ async function getMatch(matchId) {
     }
 }
 
+async function getMatchesByPhase(phase) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const matches = await conn.query(`
+            SELECT m.match_id, m.tournament_phase, m.homeTeam, m.awayTeam, m.match_date, m.homeScore, m.awayScore, m.start_time, m.end_time, 
+            t1.name AS homeTeamName, t1.class AS homeTeamClass, t1.description AS homeTeamDescription, 
+            t2.name AS awayTeamName, t2.class AS awayTeamClass, t2.description AS awayTeamDescription
+            FROM matches m
+            JOIN teams t1 ON m.homeTeam = t1.team_id
+            JOIN teams t2 ON m.awayTeam = t2.team_id
+            WHERE tournament_phase = ?
+        `, [phase]);
+        return matches.map(match => {
+            return {
+                matchId: match.match_id,
+                tournamentPhase: match.tournament_phase,
+                homeTeam: {
+                    teamId: match.homeTeam,
+                    name: match.homeTeamName,
+                    class: match.homeTeamClass,
+                    description: match.homeTeamDescription
+                },
+                awayTeam: {
+                    teamId: match.awayTeam,
+                    name: match.awayTeamName,
+                    class: match.awayTeamClass,
+                    description: match.awayTeamDescription
+                },
+                matchDate: match.match_date,
+                homeScore: match.homeScore,
+                awayScore: match.awayScore,
+                startTime: match.start_time,
+                endTime: match.end_time
+            };
+        });
+    }
+    catch (err) {
+        throw err;
+    }
+    finally {
+        if (conn) conn.end();
+    }
+}
+
+async function getLiveMatches() {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const matches = await conn.query(`
+            SELECT m.match_id, m.tournament_phase, m.homeTeam, m.awayTeam, m.match_date, m.homeScore, m.awayScore, m.start_time, m.end_time, 
+            t1.name AS homeTeamName, t1.class AS homeTeamClass, t1.description AS homeTeamDescription, 
+            t2.name AS awayTeamName, t2.class AS awayTeamClass, t2.description AS awayTeamDescription
+            FROM matches m
+            JOIN teams t1 ON m.homeTeam = t1.team_id
+            JOIN teams t2 ON m.awayTeam = t2.team_id
+            WHERE m.start_time IS NOT NULL AND m.end_time IS NULL
+        `);
+        return matches.map(match => {
+            return {
+                matchId: match.match_id,
+                tournamentPhase: match.tournament_phase,
+                homeTeam: {
+                    teamId: match.homeTeam,
+                    name: match.homeTeamName,
+                    class: match.homeTeamClass,
+                    description: match.homeTeamDescription
+                },
+                awayTeam: {
+                    teamId: match.awayTeam,
+                    name: match.awayTeamName,
+                    class: match.awayTeamClass,
+                    description: match.awayTeamDescription
+                },
+                matchDate: match.match_date,
+                homeScore: match.homeScore,
+                awayScore: match.awayScore,
+                startTime: match.start_time,
+                endTime: match.end_time
+            };
+        });
+    }
+    catch (err) {
+        throw err;
+    }
+    finally {
+        if (conn) conn.end();
+    }
+
+}
+
 async function createMatch(match){
     const date = new Date(match.matchDate);
     let conn;
@@ -131,9 +221,72 @@ async function updateMatch(matchId, match){
     }
 }
 
+async function updateMatchGoal(matchId, team, value){
+    console.log(matchId, team);
+    let conn;
+    try{
+        conn = await pool.getConnection();
+        await conn.query(`
+            UPDATE matches SET ${team} = ${team} + ? WHERE match_id = ?`,
+            [value, matchId]
+        );
+        const updatedMatch = await getMatch(matchId);
+        return updatedMatch;
+    }
+    catch(err){
+        throw err;
+    }
+    finally{
+        if(conn) conn.end();
+    }
+}
+
+async function startMatch(id){
+    let conn;
+    try{
+        conn = await pool.getConnection();
+        await conn.query(`
+            UPDATE matches SET
+            homeScore = 0, awayScore = 0,
+            start_time = NOW() WHERE match_id = ?`,
+            [id]
+        );
+        return await getMatch(id);
+    }
+    catch(err){
+        throw err;
+    }
+    finally{
+        if(conn) conn.end();
+    }
+}
+
+async function endMatch(id){
+    let conn;
+    try{
+        conn = await pool.getConnection();
+        await conn.query(`
+            UPDATE matches SET end_time = NOW() WHERE match_id = ?`,
+            [id]
+        );
+        return await getMatch(id);
+    }
+    catch(err){
+        throw err;
+    }
+    finally{
+        if(conn) conn.end();
+    }
+}
+
 module.exports = {
     getMatches,
     getMatch,
+    getMatchesByPhase,
+    getLiveMatches,
+    createMatch,
     updateMatch,
-    createMatch
+    updateMatchGoal,
+    startMatch,
+    endMatch
 }
